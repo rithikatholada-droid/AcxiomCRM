@@ -1,0 +1,46 @@
+@model List<Lead>
+@{ ViewData["Title"] = "Leads"; }
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="page-title mb-0">Leads</h2>
+    <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg"></i> New Lead</a>
+</div>
+<div class="card p-3">
+    <form method="get" class="row g-2 mb-3">
+        <div class="col-md-5"><input name="q" value="@ViewData["q"]" class="form-control" placeholder="Search lead name or company..." /></div>
+        <div class="col-md-3">
+            <select name="status" class="form-select">
+                <option value="">All statuses</option>
+                @foreach (var s in Options.LeadStatuses) { <option value="@s" selected="@((string?)ViewData["status"] == s)">@s</option> }
+            </select>
+        </div>
+        <div class="col-auto"><button class="btn btn-outline-primary"><i class="bi bi-search"></i> Search</button> <a asp-action="Index" class="btn btn-light">Reset</a></div>
+    </form>
+    <div class="table-responsive">
+    <table class="table table-hover">
+        <thead><tr><th>Name</th><th>Company</th><th>Source</th><th>Expected Value</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
+        <tbody>
+        @foreach (var l in Model)
+        {
+            <tr>
+                <td class="fw-semibold">@l.Name<div class="small text-muted">@l.Email</div></td>
+                <td>@l.Company</td><td>@l.Source</td><td>₹@l.ExpectedValue.ToString("N0")</td>
+                <td><span class="badge bg-@Options.Badge(l.Status)">@l.Status</span></td>
+                <td class="text-end">
+                    @if (l.Status == "Qualified")
+                    {
+                        <form asp-action="Convert" asp-route-id="@l.Id" method="post" class="d-inline" onsubmit="return confirm('Convert this lead to a customer?');">
+                            <button class="btn btn-sm btn-success" title="Convert to customer"><i class="bi bi-arrow-right-circle"></i> Convert</button>
+                        </form>
+                    }
+                    <a asp-action="Edit" asp-route-id="@l.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                    <form asp-action="Delete" asp-route-id="@l.Id" method="post" class="d-inline" onsubmit="return confirm('Delete this lead?');">
+                        <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                    </form>
+                </td>
+            </tr>
+        }
+        @if (!Model.Any()) { <tr><td colspan="6" class="text-center text-muted py-4">No leads found.</td></tr> }
+        </tbody>
+    </table>
+    </div>
+</div>

@@ -1,0 +1,60 @@
+@model DashboardViewModel
+@{ ViewData["Title"] = "Dashboard"; }
+
+<h2 class="page-title mb-4">Dashboard</h2>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3"><div class="stat-card bg-g1 d-flex justify-content-between align-items-center"><div><div>Total Customers</div><div class="num">@Model.TotalCustomers</div></div><i class="bi bi-people"></i></div></div>
+    <div class="col-6 col-lg-3"><div class="stat-card bg-g2 d-flex justify-content-between align-items-center"><div><div>Total Leads</div><div class="num">@Model.TotalLeads</div></div><i class="bi bi-funnel"></i></div></div>
+    <div class="col-6 col-lg-3"><div class="stat-card bg-g3 d-flex justify-content-between align-items-center"><div><div>Open Opportunities</div><div class="num">@Model.OpenOpportunities</div></div><i class="bi bi-bullseye"></i></div></div>
+    <div class="col-6 col-lg-3"><div class="stat-card bg-g7 d-flex justify-content-between align-items-center"><div><div>Pipeline Value</div><div class="num">₹@Model.PipelineValue.ToString("N0")</div></div><i class="bi bi-currency-rupee"></i></div></div>
+    <div class="col-6 col-lg-3"><div class="stat-card bg-g4 d-flex justify-content-between align-items-center"><div><div>Won</div><div class="num">@Model.WonOpportunities</div></div><i class="bi bi-trophy"></i></div></div>
+    <div class="col-6 col-lg-3"><div class="stat-card bg-g5 d-flex justify-content-between align-items-center"><div><div>Lost</div><div class="num">@Model.LostOpportunities</div></div><i class="bi bi-x-circle"></i></div></div>
+    <div class="col-6 col-lg-3"><div class="stat-card bg-g6 d-flex justify-content-between align-items-center"><div><div>Pending Follow-Ups</div><div class="num">@Model.PendingFollowUps</div></div><i class="bi bi-calendar-check"></i></div></div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-6"><div class="card p-3"><h6 class="fw-bold">Lead Status</h6><canvas id="leadChart" height="200"></canvas></div></div>
+    <div class="col-lg-6"><div class="card p-3"><h6 class="fw-bold">Opportunity Pipeline</h6><canvas id="stageChart" height="200"></canvas></div></div>
+</div>
+
+<div class="card p-3 mt-3">
+    <h6 class="fw-bold">Upcoming Follow-Ups</h6>
+    @if (!Model.Upcoming.Any())
+    {
+        <p class="text-muted mb-0">No planned follow-ups.</p>
+    }
+    else
+    {
+        <table class="table mb-0">
+            <thead><tr><th>Date</th><th>Subject</th><th>Related To</th><th>Type</th></tr></thead>
+            <tbody>
+            @foreach (var f in Model.Upcoming)
+            {
+                <tr class="@(f.FollowUpDate.Date < DateTime.Today ? "table-danger" : "")">
+                    <td>@f.FollowUpDate.ToString("dd MMM yyyy")</td>
+                    <td>@f.Subject</td>
+                    <td>@(f.Customer?.Name ?? f.Lead?.Name)</td>
+                    <td><span class="badge bg-info">@f.Type</span></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+    const colors = ['#6366f1', '#0ea5e9', '#f59e0b', '#10b981', '#ef4444', '#ec4899'];
+    new Chart(document.getElementById('leadChart'), {
+        type: 'doughnut',
+        data: { labels: @Json.Serialize(Model.LeadLabels), datasets: [{ data: @Json.Serialize(Model.LeadCounts), backgroundColor: colors }] }
+    });
+    new Chart(document.getElementById('stageChart'), {
+        type: 'bar',
+        data: { labels: @Json.Serialize(Model.StageLabels), datasets: [{ label: 'Opportunities', data: @Json.Serialize(Model.StageCounts), backgroundColor: colors }] },
+        options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+    });
+</script>
+}
